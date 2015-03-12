@@ -2,6 +2,70 @@
 :- use_module(library(pairs)).
 :- use_module(library(apply)).
 
+lastname(X)   :- student(X,_,_,_,_,_).
+firstname(X)  :- student(_,X,_,_,_,_).
+patronymic(X) :- student(_,_,X,_,_,_).
+faculty(X)    :- student(_,_,_,X,_,_).
+st_type(X)    :- student(_,_,_,_,X,_).
+st_course(X)  :- student(_,_,_,_,_,X).
+
+get_lastname(student(X,_,_,_,_,_), X).
+get_firstname(student(_,X,_,_,_,_), X).
+get_patronymic(student(_,_,X,_,_,_), X).
+get_faculty(student(_,_,_,X,_,_), X).
+get_st_type(student(_,_,_,_,X,_), X).
+get_st_course(student(_,_,_,_,_,X), X).
+
+
+course_name(X)    :- course(X, _).
+course_student(Y) :- course(_, Y).
+
+sort_by_length(Atoms, ByLength) :-
+   map_list_to_pairs(atom_length, Atoms, Pairs),
+   keysort(Pairs, Sorted),
+   pairs_values(Sorted, ByLength).
+
+longest_lastname(L)  :- findall(X, lastname(X), List), sort_by_length(List, Sl), last(Sl, L).
+shortest_lastname(S) :- findall(X, lastname(X), List), sort_by_length(List, Sl), last(Sl, S).
+
+number_of_students_faculty(I)  :- setof(X, faculty(X), L), length(L, I).
+number_of_students(I)  :- setof(student(_,_,_,_,_,_), student(_,_,_,_,_,_), L), length(L, I).
+number_of_courses(I)   :- setof(X, course_name(X), L), length(L, I).
+
+woman(S) :- get_lastname(S, N), string_to_list(N, C), last(C, L), L =:= 1072.
+man(S)   :- get_lastname(S, N), string_to_list(N, C), last(C, L), L =\= 1072.
+
+count_women(I) :- findall(student(A,_,_,_,_,_), student(A,_,_,_,_,_), L), include(woman, L, L2), length(L2, I).
+count_men(I)   :- findall(student(A,_,_,_,_,_), student(A,_,_,_,_,_), L), include(man, L, L2),   length(L2, I).
+
+number_of_students_course(C, I) :- findall(Y, course(C, Y), L), length(L, I).
+most_popular_course(M) :- findall(X, course(X, _), L), map_list_to_pairs(number_of_students_course, L, P), keysort(P, S), last(S, M).
+
+students_of_faculty(X, I) :- findall(student(_,_,_,X,_,_), faculty(X), L), length(L, I).
+largest_faculty(F) :- setof(X, faculty(X), L), map_list_to_pairs(students_of_faculty, L, P), keysort(P, S), last(S, F).
+
+men_of_faculty(X, I)   :- findall(student(A,_,_,X,_,_), student(A,_,_,X,_,_), L), include(man, L, L2), length(L2, I).
+women_of_faculty(X, I) :- findall(student(A,_,_,X,_,_), student(A,_,_,X,_,_), L), include(woman, L, L2), length(L2, I).
+faculty_of_woman(F) :- setof(X, faculty(X), L), map_list_to_pairs(women_of_faculty, L, P), keysort(P, S), last(S, F).
+faculty_of_man(F) :- setof(X, faculty(X), L), map_list_to_pairs(men_of_faculty, L, P), keysort(P, S), last(S, F).
+
+number_of_women_course(C, I) :- findall(student(A,_,_,_,_,_), course(C, student(A,_,_,_,_,_)), L), include(woman, L, L2), length(L2, I).
+number_of_men_course(C, I) :- findall(student(A,_,_,_,_,_), course(C, student(A,_,_,_,_,_)), L), include(man, L, L2), length(L2, I).
+course_of_women_abs(F) :- findall(X, course(X, _), L), map_list_to_pairs(number_of_women_course, L, P), keysort(P, S), last(S, F).
+course_of_men_abs(F) :- findall(X, course(X, _), L), map_list_to_pairs(number_of_men_course, L, P), keysort(P, S), last(S, F).
+
+number_of_women_course_rel(C, I) :- findall(student(A,_,_,_,_,_), course(C, student(A,_,_,_,_,_)), L), include(woman, L, L2), length(L, I1), length(L2, I2), I is I2 / I1.
+number_of_men_course_rel(C, I) :- findall(student(A,_,_,_,_,_), course(C, student(A,_,_,_,_,_)), L), include(man, L, L2), length(L, I1), length(L2, I2), I is I2 / I1.
+course_of_women_rel(F) :- findall(X, course(X, _), L), map_list_to_pairs(number_of_women_course_rel, L, P), keysort(P, S), last(S, F).
+course_of_men_rel(F) :- findall(X, course(X, _), L), map_list_to_pairs(number_of_men_course_rel, L, P), keysort(P, S), last(S, F).
+
+age(student(_,_,_,_,'бакалавриат', C), C) :- C.
+age(student(_,_,_,_,'очно-заочная форма, бакалавриат', C), C) :- C.
+age(student(_,_,_,_,'специалитет', C), C) :- C.
+age(student(_,_,_,_,'очно-заочная форма, специалитет', C), C) :- C.
+age(student(_,_,_,_,'магистратура', C), A) :- A is 4 + C.
+age(student(_,_,_,_,'очно-заочная форма, магистратура', C), A) :- A is 4 + C.
+
 student('Абадеева', 'С.', 'А.', 'Экономический факультет', 'бакалавриат', 1).
 student('Абанкин', 'О.', 'А.', 'Механико-математический факультет', 'специалитет', 4).
 student('Абачева', 'З.', 'А.', 'Институт стран Азии и Африки', 'бакалавриат', 1).
@@ -18379,45 +18443,4 @@ course('Научная картина мира: от Большого взрыв
 course('Научная картина мира: от Большого взрыва до глобального мира', student('Зайцева', 'Д.', 'В.', 'Факультет фундаментальной физико-химической инженерии', 'бакалавриат', 3)).
 course('Научная картина мира: от Большого взрыва до глобального мира', student('Шевченко', 'Б.', 'А.', 'Высшая школа телевидения (факультет)', 'бакалавриат', 3)).
 
-lastname(X)   :- student(X,_,_,_,_,_).
-firstname(X)  :- student(_,X,_,_,_,_).
-patronymic(X) :- student(_,_,X,_,_,_).
-faculty(X)    :- student(_,_,_,X,_,_).
-st_type(X)    :- student(_,_,_,_,X,_).
-st_course(X)  :- student(_,_,_,_,_,X).
-
-get_lastname(student(X,_,_,_,_,_), X).
-get_firstname(student(_,X,_,_,_,_), X).
-get_patronymic(student(_,_,X,_,_,_), X).
-get_faculty(student(_,_,_,X,_,_), X).
-get_st_type(student(_,_,_,_,X,_), X).
-get_st_course(student(_,_,_,_,_,X), X).
-
-
-course_name(X)    :- course(X, _).
-course_student(Y) :- course(_, Y).
-
-sort_by_length(Atoms, ByLength) :-
-   map_list_to_pairs(atom_length, Atoms, Pairs),
-   keysort(Pairs, Sorted),
-   pairs_values(Sorted, ByLength).
-
-longest_lastname(L)  :- findall(X, lastname(X), List), sort_by_length(List, Sl), last(Sl, L).
-shortest_lastname(S) :- findall(X, lastname(X), List), sort_by_length(List, Sl), last(Sl, S).
-
-number_of_students_faculty(I)  :- setof(X, faculty(X), L), length(L, I).
-number_of_students(I)  :- setof(student(A,B,C,D,E,F), student(A,B,C,D,E,F), L), length(L, I).
-number_of_courses(I)   :- setof(X, course_name(X), L), length(L, I).
-
-woman(S) :- get_lastname(S, N), string_to_list(N, C), last(C, L), L =:= 1072.
-man(S)   :- get_lastname(S, N), string_to_list(N, C), last(C, L), L =\= 1072.
-
-count_women(I) :- findall(student(A,B,C,D,E,F), student(A,B,C,D,E,F), L), include(woman, L, L2), length(L2, I).
-count_men(I)   :- findall(student(A,B,C,D,E,F), student(A,B,C,D,E,F), L), include(man, L, L2),   length(L2, I).
-
-number_of_students_course(C, I) :- findall(Y, course(C, Y), L), length(L, I).
-most_popular_course(M) :- findall(X, course(X, _), L), map_list_to_pairs(number_of_students_course, L, P), keysort(P, S), last(S, M).
-
-students_of_faculty(X, I) :- findall(student(A,B,C,X,E,F), faculty(X), L), length(L, I).
-largest_faculty(F) :- setof(X, faculty(X), L), 
 
