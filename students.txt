@@ -73,12 +73,22 @@ course_of_men_rel(F) :- findall(X, course(X, _), L), map_list_to_pairs(number_of
 number_of_student_courses(X, I) :- findall(C, course(C, X), L), length(L, I).
 smartest_student(X) :- findall(student(A,B,C,D,E,F), student(A,B,C,D,E,F), L), map_list_to_pairs(number_of_student_courses, L, P), keysort(P, S), last(S, X).
 
-age(student(_,_,_,_,'бакалавриат', C), C) :- C.
-age(student(_,_,_,_,'очно-заочная форма, бакалавриат', C), C) :- C.
-age(student(_,_,_,_,'специалитет', C), C) :- C.
-age(student(_,_,_,_,'очно-заочная форма, специалитет', C), C) :- C.
+age(student(_,_,_,_,'бакалавриат', C), C).
+age(student(_,_,_,_,'очно-заочная форма, бакалавриат', C), C).
+age(student(_,_,_,_,'специалитет', C), C).
+age(student(_,_,_,_,'очно-заочная форма, специалитет', C), C).
 age(student(_,_,_,_,'магистратура', C), A) :- A is 4 + C.
 age(student(_,_,_,_,'очно-заочная форма, магистратура', C), A) :- A is 4 + C.
+age(student(_,_,_,_,'заочная форма, бакалавриат', C), C).
+age(student(_,_,_,_,'заочная форма, специалитет', C), C).
+
+% age(student(_,_,_,_,A,B)) :- age(student(_,_,_,_,A,B), _).
+
+apply_age([], 0).
+apply_age([H|T], S) :- apply_age(T, S1), age(H, A), S is S1 + A.
+
+students_course_age(C, A) :- findall(Y, course(C, Y), L), apply_age(L, S), length(L, I), A is S / I.
+course_with_oldest_students(M) :- findall(X, course(X, _), L), map_list_to_pairs(students_course_age, L, P), keysort(P, S), last(S, M).
 
 student('Абадеева', 'С.', 'А.', 'Экономический факультет', 'бакалавриат', 1).
 student('Абанкин', 'О.', 'А.', 'Механико-математический факультет', 'специалитет', 4).
