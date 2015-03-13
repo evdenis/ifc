@@ -84,20 +84,20 @@ foreach (keys $courses) {
 my $last = '';
 @students = grep {if ($last ne $_) {$last = $_; 1} else {0}} @students;
 
+my @courses;
+foreach (keys $courses) {
+   push @courses, "course('$_')"
+}
 
-my @file;
+my @enroll;
 foreach (keys $courses) {
    my $course = $_;
-   foreach (@{ $courses->{$_}->{students} }) {
-      push @file, "course('$course', " . student_term($_) . ")."
-   }
+   my $students = '[' . join(', ', map {student_term($_)} @{ $courses->{$_}->{students} }) . ']';
+   push @enroll, "enroll('$course', $students)";
 }
 
 say ':- use_module(library(lists)).';
 say '';
-say join(".\n", @students) . ".";
-say '';
-say join("\n", @file);
 say '';
 say 'lastname(X)   :- student(X,_,_,_,_,_).';
 say 'firstname(X)  :- student(_,X,_,_,_,_).';
@@ -105,4 +105,11 @@ say 'patronymic(X) :- student(_,_,X,_,_,_).';
 say 'faculty(X)    :- student(_,_,_,X,_,_).';
 say 'st_type(X)    :- student(_,_,_,_,X,_).';
 say 'st_course(X)  :- student(_,_,_,_,_,X).';
+say '';
+say '';
+say join(".\n", @students) . ".";
+say '';
+say join(".\n", @courses)  . ".";
+say '';
+say join(".\n", @enroll)   . ".";
 
