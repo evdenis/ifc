@@ -26,7 +26,11 @@ sort_by_length(Atoms, ByLength) :-
    pairs_values(Sorted, ByLength).
 
 longest_lastname(L)  :- findall(X, lastname(X), List), sort_by_length(List, Sl), last(Sl, L).
-shortest_lastname(S) :- findall(X, lastname(X), List), sort_by_length(List, Sl), last(Sl, S).
+shortest_lastname(S) :- findall(X, lastname(X), List), sort_by_length(List, Sl), Sl = [S|_].
+
+lastname_count(X, I) :- findall(student(X,_,_,_,_,_), student(X,_,_,_,_,_), L), length(L, I).
+popular_woman_lastname(F) :- findall(student(A,_,_,_,_,_), student(A,_,_,_,_,_), L), include(woman, L, L2), map_list_to_pairs(lastname_count, L2, P), keysort(P, S), last(S, F).
+popular_man_lastname(F) :- findall(student(A,_,_,_,_,_), student(A,_,_,_,_,_), L), include(man, L, L2), map_list_to_pairs(lastname_count, L2, P), keysort(P, F).
 
 number_of_students_faculty(I)  :- setof(X, faculty(X), L), length(L, I).
 number_of_students(I)  :- setof(student(_,_,_,_,_,_), student(_,_,_,_,_,_), L), length(L, I).
