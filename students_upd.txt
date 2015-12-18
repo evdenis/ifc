@@ -1,4 +1,6 @@
 :- use_module(library(lists)).
+:- use_module(library(pairs)).
+:- use_module(library(apply)).
 
 
 lastname(X)   :- student(X,_,_,_,_,_).
@@ -7,6 +9,24 @@ patronymic(X) :- student(_,_,X,_,_,_).
 faculty(X)    :- student(_,_,_,X,_,_).
 st_type(X)    :- student(_,_,_,_,X,_).
 st_course(X)  :- student(_,_,_,_,_,X).
+
+age(student(_,_,_,_,'бакалавриат', C), C).
+age(student(_,_,_,_,'очно-заочная форма, бакалавриат', C), C).
+age(student(_,_,_,_,'специалитет', C), C).
+age(student(_,_,_,_,'очно-заочная форма, специалитет', C), C).
+age(student(_,_,_,_,'магистратура', C), A) :- A is 4 + C.
+age(student(_,_,_,_,'очно-заочная форма, магистратура', C), A) :- A is 4 + C.
+age(student(_,_,_,_,'заочная форма, бакалавриат', C), C).
+age(student(_,_,_,_,'заочная форма, специалитет', C), C).
+
+% age(student(_,_,_,_,A,B)) :- age(student(_,_,_,_,A,B), _).
+
+apply_age([], 0).
+apply_age([H|T], S) :- apply_age(T, S1), age(H, A), S is S1 + A.
+
+students_course_age(C, 0) :- enroll(C, []).
+students_course_age(C, A) :- enroll(C, L), apply_age(L, S), length(L, I), A is S / I.
+course_with_oldest_students(M) :- setof(X, course(X), L), map_list_to_pairs(students_course_age, L, P), keysort(P, S), last(S, M).
 
 
 student('Абадеева', 'С.', 'А.', 'Экономический факультет', 'бакалавриат', 1).
